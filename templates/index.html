@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情緒辨識互動網頁</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            font-family: "Microsoft JhengHei", sans-serif;
+        }
+        h1 { margin-top: 20px; color: #FFD700; }
+        .video-container {
+            margin: 20px auto;
+            border: 5px solid #fff;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            position: relative; /* 為了讓提示框可以定位 */
+        }
+        img { display: block; width: 640px; max-width: 100%; }
+        p { font-size: 1.2rem; opacity: 0.8; }
+        
+        /* 截圖成功時的提示框樣式 */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎭 AI 情緒互動鏡頭</h1>
+    <p>試著對鏡頭做出不同表情，按下 <b>"S"</b> 鍵可以截圖！</p>
+
+    <div class="video-container">
+        <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+    </div>
+
+    <div id="toast">✨ 截圖成功！已儲存至電腦</div>
+
+    <script>
+        // 監聽鍵盤事件
+        document.addEventListener('keydown', function(event) {
+            // 如果按下的是 's' 或 'S'
+            if (event.key === 's' || event.key === 'S') {
+                takeSnapshot();
+            }
+        });
+
+        function takeSnapshot() {
+            // 發送請求給 Python 後端
+            fetch('/snapshot')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Saved:', data.filename);
+                        showToast(); // 顯示成功提示
+                    } else {
+                        console.error('Error taking snapshot');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // 顯示提示框的函式
+        function showToast() {
+            var x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+    </script>
+
+</body>
+</html>
