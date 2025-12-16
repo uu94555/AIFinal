@@ -6,4 +6,5 @@ pip install deepface tf-keras opencv-python pandas
 pip install pillow
 
 在VS Code中使用emotion_env環境執行app.py
-並且在瀏覽器中輸入http://127.0.0.1:5000即可在本機執行
+並且在瀏覽器中輸入http://127.0.0.1:5000
+即可在本機執行
