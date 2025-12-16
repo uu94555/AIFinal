@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擺臉色</title>
+    <style>
+
+        /*網頁背景樣式*/
+        body {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            font-family: "Microsoft JhengHei", sans-serif;
+        }
+
+        /*標題樣式*/
+        h1 { margin-top: 20px; color: #FFD700; }
+
+        /*畫面框樣式*/
+        .video-container {
+            margin: 20px auto;
+            border: 5px solid #fff;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        img { display: block; width: 640px; max-width: 100%; }
+        p { font-size: 1.2rem; opacity: 0.8; }
+        
+        /*拍照按鈕樣式*/
+        #snapshotButton {
+            margin: 20px auto;
+            padding: 10px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #4CAF50; /* 綠色 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s;
+            display: block
+        }
+
+        /*拍照按鈕動畫*/
+        #snapshotButton:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /*照片提示框樣式*/
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        /*照片連結*/
+        #toast a { color: #87CEEB; text-decoration: none; font-weight: bold; }
+
+        /*照片提示框顯示*/
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 4s;
+            animation: fadein 0.5s, fadeout 0.5s 4s; /* 增加顯示時間到 4 秒 */
+        }
+
+        /*照片提示框動畫*/
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            0% {opacity: 1; bottom: 30px;}
+            90% {opacity: 1;} /*確保在淡出前保持可見*/
+            100% {opacity: 0; bottom: 0;}
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🎭擺臉色</h1>
+    <p>對鏡頭做出不同表情，按下S鍵或點擊按鈕可以拍照！</p>
+
+    <div class="video-container">
+        <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+    </div>
+
+    <button id="snapshotButton" onclick="takeSnapshot()">
+        <span style="font-size: 1.2rem; margin-right: 5px;">📷</span> 點擊拍照
+    </button>
+
+    <div id="toast"></div> <script>
+        // 監聽鍵盤事件
+        document.addEventListener('keydown', function(event) {
+            // 如果按下的是 's' 或 'S'
+            if (event.key === 's' || event.key === 'S') {
+                event.preventDefault(); // 防止某些瀏覽器預設行為
+                takeSnapshot();
+            }
+        });
+
+        function takeSnapshot() {
+            // 禁用按鈕防止重複點擊
+            const button = document.getElementById('snapshotButton');
+            button.disabled = true;
+            button.textContent = "💾 正在截圖...";
+
+            fetch('/snapshot')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const fileUrl = `/snapshots/${data.filename}`;
+                        const linkHtml = `<a href="${fileUrl}" target="_blank">點擊查看 ${data.filename}</a>`;
+                        showToast(`✨ 截圖成功！ ${linkHtml}`, true);
+                    } else {
+                        showToast(`❌ 截圖失敗: ${data.message}`, false);
+                    }
+                })
+                .catch(error => {
+                    showToast('🚨 請求失敗，請檢查伺服器連線。', false);
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    // 恢復按鈕狀態
+                    button.disabled = false;
+                    button.innerHTML = '<span style="font-size: 1.2rem; margin-right: 5px;">📷</span> 點擊截圖';
+                });
+        }
+
+        // 顯示提示框的函式 (已優化，可顯示自定義內容)
+        function showToast(message, isSuccess) {
+            var x = document.getElementById("toast");
+            x.innerHTML = message;
+            
+            // 根據成功/失敗調整邊框顏色
+            x.style.borderColor = isSuccess ? '#4CAF50' : '#FF6347'; 
+            
+            x.className = "show";
+            
+            // 延遲 4 秒後移除 show class
+            setTimeout(function(){ 
+                x.className = x.className.replace("show", ""); 
+            }, 4500); // 略長於動畫時間
+        }
+    </script>
+
+</body>
+</html>
