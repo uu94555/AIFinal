@@ -1,5 +1,6 @@
 # 114-1人工智慧期末 第二組擺臉色
 執行前請先準備虛擬環境
+
 conda create -n emotion_env python=3.10
 
 conda activate emotion_env
